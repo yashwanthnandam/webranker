@@ -7,7 +7,7 @@ from urlranker.use_cases import GPTService
 class HTMLProcessingControllerTestCase(TestCase):
     def setUp(self):
         self.client = Client()
-        self.gpt_service = GPTService('test_api_key')
+        self.gpt_service = GPTService('test_api_key','gpt-3.5-turbo')
         self.controller = HTMLProcessingController(self.gpt_service)
 
     @patch('openai.ChatCompletion.create')
