@@ -8,8 +8,8 @@ services:
       - .:/code
     ports:
       - "8000:8000"
-    env_file:
-      - .env
+    environment:
+      OPENAI_API_KEY: sk-proj-Qh6023n5FPk6ZL0wuW8dd3BlbkFJ533ylvu1uYBlUNYdrgPi
     depends_on:
       - db
       - redis
