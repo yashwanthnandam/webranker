@@ -1,7 +1,9 @@
+# use_cases.py
 from bs4 import BeautifulSoup
 from .entities import Link
+from .models import URLResult
 import openai
-
+from django.core.cache import cache
 
 class HTMLProcessor:
     def process_html(self, html_content):
@@ -15,9 +17,8 @@ class HTMLProcessor:
         valid_links = [link for link in link_details if link.is_valid()]
         return valid_links
 
-
 class GPTService:
-    def __init__(self, api_key, model):
+    def __init__(self, api_key, model='gpt-3.5-turbo'):
         openai.api_key = api_key
         self.model = model
         
@@ -25,8 +26,24 @@ class GPTService:
         link_info = "\n\nExtracted Links:\n" + "\n".join(
             [f"Text: {link.text}, URL: {link.url}" for link in links]
         )
-        prompt = link_info 
-        return self.call_gpt(url, prompt)
+        return self.get_or_create_result(url, link_info)
+
+    def get_or_create_result(self, url, processed_html):
+        cache_key = f"url_result_{url}"
+        result = cache.get(cache_key)
+        
+        if not result:
+            try:
+                result = URLResult.objects.get(url=url)
+                cache.set(cache_key, result.result)
+                result = result.result
+            except URLResult.DoesNotExist:
+                result = self.call_gpt(url, processed_html)
+                if 'error' not in result:
+                    URLResult.objects.create(url=url, result=result)
+                    cache.set(cache_key, result)
+
+        return result
 
     def call_gpt(self, url, processed_html):
         try:
@@ -41,8 +58,7 @@ class GPTService:
                 max_tokens=300
             )
             gpt_output = response['choices'][0]['message']['content'].strip()
-            link_color_map = self.parse_gpt_output(gpt_output)
-            return link_color_map
+            return self.parse_gpt_output(gpt_output)
         except openai.OpenAIError as e:
             return {'error': f"Error calling GPT service: {str(e)}"}
 

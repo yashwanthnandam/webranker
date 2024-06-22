@@ -1,3 +1,4 @@
+# controllers.py
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -23,4 +24,5 @@ class HTMLProcessingController:
             gpt_output = self.gpt_service.evaluate_links(url, valid_links)
 
             return JsonResponse(gpt_output)
+
         return JsonResponse({'error': 'POST method required'}, status=400)
