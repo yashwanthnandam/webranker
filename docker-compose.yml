@@ -1,36 +1,52 @@
 version: '3.8'
 
-services:
-  web:
-    build: .
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/code
-    ports:
-      - "8000:8000"
-    environment:
-      OPENAI_API_KEY: your_openai_api_key
-    depends_on:
-      - db
-      - redis
+        services:
+          web:
+            build: .
+            command: python manage.py runserver 0.0.0.0:8000
+            volumes:
+              - .:/code
+            ports:
+              - "8000:8000"
+            environment:
+              OPENAI_API_KEY: your_openai_api_key
+            depends_on:
+              - db
+              - redis
+            x-tinkr:
+              load_balancer: 
+                tenancy: shared
+                type: webserver
+              environment:
+                - POSTGRES_HOST=<hostname:db>
+                - POSTGRES_USER=your_db_user
+                - POSTGRES_PASSWORD=your_db_password
 
-  db:
-    image: postgres:13
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    restart: always
-    environment:
-      POSTGRES_DB: your_db_name
-      POSTGRES_USER: your_db_user
-      POSTGRES_PASSWORD: your_db_password
-    expose:
-      - 5432
+          db:
+            image: postgres:13
+            volumes:
+              - postgres_data:/var/lib/postgresql/data/
+            restart: always
+            environment:
+              POSTGRES_DB: your_db_name
+              POSTGRES_USER: your_db_user
+              POSTGRES_PASSWORD: your_db_password
+            expose:
+              - 5432
+            x-tinkr:
+              load_balancer:
+                type: network
+                tenancy: dedicated
 
-  redis:
-    image: redis:6
-    restart: always
-    ports:
-      - "6379:6379"
+          redis:
+            image: redis:6
+            restart: always
+            ports:
+              - "6379:6379"
+            x-tinkr:
+              load_balancer:
+                type: network
+                tenancy: dedicated
 
-volumes:
-  postgres_data:
+        volumes:
+          postgres_data:
