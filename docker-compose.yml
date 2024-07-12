@@ -8,8 +8,6 @@ services:
       - .:/code
     ports:
       - "8000:8000"
-    environment:
-      OPENAI_API_KEY: your_openai_api_key
     depends_on:
       - db
       - redis
@@ -31,7 +29,7 @@ services:
         - POSTGRES_PASSWORD=your_db_password
 
   db:
-    image: postgres:13
+    image: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     restart: always
@@ -47,7 +45,7 @@ services:
         tenancy: dedicated
 
   redis:
-    image: redis:6
+    image: redis
     restart: always
     ports:
       - "6379:6379"
